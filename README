@@ -1,0 +1,13 @@
+What?
+-----
+
+ This is a Haskell rewrite of the original xbattbar utility from here [1].
+
+Why?
+----
+
+ * because I can
+ * learn me some Haskell for the great good
+ * original xbattbar is not very actively maintained
+
+[1] http://iplab.aist-nara.ac.jp/member/suguru/xbattbar.html
