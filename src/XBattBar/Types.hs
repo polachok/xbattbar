@@ -1,4 +1,4 @@
-module Types (Options(..)) where
+module XBattBar.Types (Options(..)) where
 
 data Options = Options {
                     onTop               :: Bool,

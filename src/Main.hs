@@ -2,8 +2,8 @@ module Main (main) where
 import System.Environment
 import System.Console.GetOpt
 
-import Types
-import XBattBar (start)
+import XBattBar.Types
+import XBattBar.Core (start)
 
 defaultOptions :: Options
 defaultOptions = Options {
@@ -45,7 +45,7 @@ nonoptions opts ["left"] = opts { position = "left" }
 nonoptions opts ["right"] = opts { position = "right" } 
 nonoptions _ _ = error "wrong position"
 
-usage = error $ "usage:  xbattbar [-a] [-h|v] [-p sec] [-t thickness] " ++
+usage = error $ "usage: xbattbar [-a] [-h|v] [-p sec] [-t thickness] " ++
               "[-I color] [-O color] [-i color] [-o color] " ++
               "[ top | bottom | left | right ]"
 

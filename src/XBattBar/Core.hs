@@ -1,6 +1,6 @@
-module XBattBar (start) where
-import Types
-import Backend
+module XBattBar.Core (start) where
+import XBattBar.Types
+import XBattBar.Backend
 import Data.Word
 import Data.Bits
 import Control.Monad

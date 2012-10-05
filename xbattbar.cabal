@@ -10,6 +10,7 @@ Cabal-Version:       >=1.4
 Description:         Battery indicator for X11
 
 Executable xbattbar
-  Main-is:           main.hs
+  Main-is:           Main.hs
+  hs-source-dirs:    src
   GHC-Options:       -with-rtsopts=-V0
   Build-Depends:     base >= 3 && < 5, select, X11
