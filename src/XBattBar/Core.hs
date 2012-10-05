@@ -40,7 +40,7 @@ getWindowRect pos th rect = case pos of
 getIndicatorRect :: Position -> Double -> Rectangle -> Rectangle
 getIndicatorRect pos perc rect = case pos of
                         Top -> rect { rect_x = p (rect_width rect) - fromIntegral (rect_width rect) }
-                        Bottom -> rect { rect_x = p (rect_width rect) - fromIntegral (rect_width rect) }
+                        Bottom -> rect { rect_x = p (rect_width rect) - fromIntegral (rect_width rect), rect_y = 0 }
                         _ -> rect { rect_y = fromIntegral (rect_height rect) - p (rect_height rect) }
                         where p x = floor $ perc * fromIntegral x
 
