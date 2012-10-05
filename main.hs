@@ -32,7 +32,9 @@ options =
       Option "o" [] (ReqArg (\x s -> s { dischargeColorBat = x }) "PX")
         "Charge color when on battery",
       Option "i" [] (ReqArg (\x s -> s { chargeColorBat = x }) "PX")
-        "Discharge color when on battery"
+        "Discharge color when on battery",
+      Option "h" [] (NoArg (usage))
+        "Print help message"
     ]
 
 nonoptions :: Options -> [String] -> Options
@@ -42,6 +44,10 @@ nonoptions opts ["bottom"] = opts { position = "bottom" }
 nonoptions opts ["left"] = opts { position = "left" } 
 nonoptions opts ["right"] = opts { position = "right" } 
 nonoptions _ _ = error "wrong position"
+
+usage = error $ "usage:  xbattbar [-a] [-h|v] [-p sec] [-t thickness] " ++
+              "[-I color] [-O color] [-i color] [-o color] " ++
+              "[ top | bottom | left | right ]"
 
 main = do
     args <- getArgs
