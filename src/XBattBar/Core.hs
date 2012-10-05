@@ -39,9 +39,9 @@ getWindowRect pos th rect = case pos of
 
 getIndicatorRect :: Position -> Double -> Rectangle -> Rectangle
 getIndicatorRect pos perc rect = case pos of
-                        Top -> rect { rect_x = p (rect_width rect) - fromIntegral (rect_width rect) }
+                        Top -> rect { rect_x = p (rect_width rect) - fromIntegral (rect_width rect), rect_y = 0 }
                         Bottom -> rect { rect_x = p (rect_width rect) - fromIntegral (rect_width rect), rect_y = 0 }
-                        _ -> rect { rect_y = fromIntegral (rect_height rect) - p (rect_height rect) }
+                        _ -> rect { rect_y = fromIntegral (rect_height rect) - p (rect_height rect), rect_x = 0 }
                         where p x = floor $ perc * fromIntegral x
 
 getFG dpy screen opts state = do
