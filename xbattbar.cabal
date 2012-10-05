@@ -1,16 +1,20 @@
-Name:                xbattbar
-Version:             0.0
-Synopsis:            Battery indicator for X11
-License:             MIT
-License-file:        LICENSE
-Author:              Alexander Polakov
-Maintainer:          plhk@sdf.org
-Build-Type:          Simple
-Cabal-Version:       >=1.4
-Description:         Battery indicator for X11
+name:                xbattbar
+version:             0.0.1.0
+synopsis:            Simple battery indicator
+-- description:
+homepage:            https://github.com/polachok/xbattbar
+license:             MIT
+license-file:        LICENSE
+author:              Alexander Polakov
+maintainer:          plhk@sdf.org
+-- copyright:
+category:            Graphics
+build-type:          Simple
+cabal-version:       >=1.4
 
-Executable xbattbar
-  Main-is:           Main.hs
-  hs-source-dirs:    src
+executable xbattbar
+  main-is:           Main.hs
+  other-modules:     XBattBar.Types, XBattBar.Core, XBattBar.Backend
   GHC-Options:       -with-rtsopts=-V0
-  Build-Depends:     base >= 3 && < 5, select, X11
+  build-depends:     base, X11, select
+  hs-source-dirs:    src
