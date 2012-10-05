@@ -1,11 +1,13 @@
 Name:                xbattbar
 Version:             0.0
-Description:         Battery indicator for X11
+Synopsis:            Battery indicator for X11
 License:             MIT
+License-file:        LICENSE
 Author:              Alexander Polakov
 Maintainer:          plhk@sdf.org
 Build-Type:          Simple
-Cabal-Version:       >=1.2
+Cabal-Version:       >=1.4
+Description:         Battery indicator for X11
 
 Executable xbattbar
   Main-is:           main.hs
