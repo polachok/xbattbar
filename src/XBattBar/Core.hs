@@ -1,11 +1,12 @@
 module XBattBar.Core (start) where
+import Prelude hiding (Left, Right)
 import XBattBar.Types
 import XBattBar.Backend
 import Data.Word
 import Data.Bits
 import Control.Monad
 import Graphics.X11.Types
-import Graphics.X11.Xlib.Types
+import Graphics.X11.Xlib.Types hiding (Position)
 import Graphics.X11.Xlib.Display
 import Graphics.X11.Xlib.Window
 import Graphics.X11.Xlib.Event
@@ -19,38 +20,35 @@ data XBattBar = XBattBar {
                     dpy :: Display,
                     screen :: ScreenNumber,
                     window :: Window,
-                    x :: Position,
-                    y :: Position,
-                    w :: Dimension,
-                    h :: Dimension,
+                    geom :: Rectangle,
                     gc :: GC,
                     options :: Options
                 }
 
-getX dpy screen opts = case position opts of
-                    "right" -> fromIntegral $ (displayWidth dpy screen) - (fromIntegral $ thickness opts)
-                    _ -> 0
+getScreenRect :: Display -> ScreenNumber -> Rectangle
+getScreenRect dpy screen = Rectangle 0 0 sw sh
+                            where sw = fromIntegral $ displayWidth dpy screen
+                                  sh = fromIntegral $ displayHeight dpy screen
 
-getY dpy screen opts = case position opts of
-                    "bottom" -> fromIntegral $ (displayHeight dpy screen) - (fromIntegral $ thickness opts)
-                    _ -> 0
+getWindowRect :: Position -> Dimension -> Rectangle -> Rectangle
+getWindowRect pos th rect = case pos of
+                        Top -> rect { rect_height = th }
+                        Bottom -> getWindowRect Top th $ rect { rect_y = fromIntegral $ rect_height rect - th }
+                        Left -> rect { rect_width = th }
+                        Right -> getWindowRect Left th $ rect { rect_x = fromIntegral $ rect_width rect - th }
 
-getW dpy screen opts = case position opts of
-                    "left" -> fromIntegral $ thickness opts
-                    "right" -> fromIntegral $ thickness opts
-                    _ -> fromIntegral $ displayWidth dpy screen
-
-getH dpy screen opts = case position opts of
-                    "top" -> fromIntegral $ thickness opts
-                    "bottom" -> fromIntegral $ thickness opts
-                    _ -> fromIntegral $ displayHeight dpy screen
+getIndicatorRect :: Position -> Double -> Rectangle -> Rectangle
+getIndicatorRect pos perc rect = case pos of
+                        Top -> rect { rect_x = p (rect_width rect) - fromIntegral (rect_width rect) }
+                        Bottom -> rect { rect_x = p (rect_width rect) - fromIntegral (rect_width rect) }
+                        _ -> rect { rect_y = fromIntegral (rect_height rect) - p (rect_height rect) }
+                        where p x = floor $ perc * fromIntegral x
 
 getFG dpy screen opts state = do
     (color, _) <- allocNamedColor dpy (defaultColormap dpy screen)
                    ((case state of 
                         Battery -> chargeColorBat
                         AC -> chargeColorAC) opts)
-                                        
     return $ color_pixel color
 
 getBG dpy screen opts state = do
@@ -67,14 +65,15 @@ start opts = do
     root <- rootWindow dpy screen
     let borderWidth = 0
         attrmask = cWOverrideRedirect
+        geom = getWindowRect (position opts) (fromIntegral $ thickness opts) (getScreenRect dpy screen)
     window <- allocaSetWindowAttributes $
         \attrs -> do 
                     set_override_redirect attrs True
                     createWindow dpy root
-                                (getX dpy screen opts)
-                                (getY dpy screen opts)
-                                (getW dpy screen opts)
-                                (getH dpy screen opts)
+                                (rect_x geom)
+                                (rect_y geom)
+                                (rect_width geom)
+                                (rect_height geom)
                                 borderWidth
                                 (defaultDepth dpy screen)
                                 inputOutput
@@ -82,12 +81,7 @@ start opts = do
                                 attrmask
                                 attrs
     gc <- createGC dpy window
-    let xbb = XBattBar dpy screen window (getX dpy screen opts)
-                                         (getY dpy screen opts)
-                                         (getW dpy screen opts)
-                                         (getH dpy screen opts)
-                                         gc
-                                         opts
+    let xbb = XBattBar dpy screen window geom gc opts
     run xbb
     return ()
 
@@ -97,18 +91,14 @@ draw xbb charge state = do
         screen' = screen xbb
         window' = window xbb
         gc' = gc xbb
-        x' = x xbb
-        y' = y xbb
-        w' = w xbb
-        h' = h xbb
+        geom' = geom xbb
+        pos' = position $ options xbb
     fg <- getFG dpy' screen' (options xbb) state
     bg <- getBG dpy' screen' (options xbb) state
     setForeground dpy' gc' bg
-    fillRectangle dpy' window' gc' x' y' w' h'
-
-    let w'' = floor $ (fromIntegral w') * charge
+    fillRectangles dpy' window' gc' [geom']
     setForeground dpy' gc' fg
-    fillRectangle dpy' window' gc' x' y' w'' h'
+    fillRectangles dpy' window' gc' [getIndicatorRect pos' charge geom']
     flush dpy'
 
 handleEvents :: XBattBar -> Double -> Power -> IO ()
@@ -122,7 +112,8 @@ handleEvents xbb charge state = do
                 nextEvent dpy' e
 
 selectWrapper fd eventH timeoutH xbb c s = do
-    n <- select [fd] [] [] (Time 5 0)
+    let i = interval $ options xbb
+    n <- select [fd] [] [] (Time i 0)
     case n of 
         -1 -> error "select() error"
         0 ->  timeoutH xbb c s

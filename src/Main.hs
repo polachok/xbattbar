@@ -2,6 +2,7 @@ module Main (main) where
 import System.Environment
 import System.Console.GetOpt
 
+import Prelude hiding (Left, Right)
 import XBattBar.Types
 import XBattBar.Core (start)
 
@@ -14,7 +15,7 @@ defaultOptions = Options {
                       dischargeColorAC  = "olive drab",
                       chargeColorBat    = "blue",
                       dischargeColorBat = "red",
-                      position          = "top"
+                      position          = Bottom
                  }
 
 options :: [ OptDescr (Options -> Options) ]
@@ -39,11 +40,11 @@ options =
 
 nonoptions :: Options -> [String] -> Options
 nonoptions opts [] = opts
-nonoptions opts ["top"] = opts { position = "top" } 
-nonoptions opts ["bottom"] = opts { position = "bottom" } 
-nonoptions opts ["left"] = opts { position = "left" } 
-nonoptions opts ["right"] = opts { position = "right" } 
-nonoptions _ _ = error "wrong position"
+nonoptions opts ["top"] = opts { position = Top }
+nonoptions opts ["bottom"] = opts { position = Bottom }
+nonoptions opts ["left"] = opts { position = Left }
+nonoptions opts ["right"] = opts { position = Right }
+nonoptions _ _ = usage
 
 usage = error $ "usage: xbattbar [-a] [-h|v] [-p sec] [-t thickness] " ++
               "[-I color] [-O color] [-i color] [-o color] " ++

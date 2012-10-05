@@ -1,4 +1,7 @@
-module XBattBar.Types (Options(..)) where
+module XBattBar.Types (Options(..), Position(..)) where
+
+data Position = Top | Bottom | Left | Right
+                deriving (Show, Read)
 
 data Options = Options {
                     onTop               :: Bool,
@@ -8,5 +11,5 @@ data Options = Options {
                     dischargeColorAC    :: String,
                     chargeColorBat      :: String,
                     dischargeColorBat   :: String,
-                    position            :: String
+                    position            :: Position
                 } deriving (Show)
