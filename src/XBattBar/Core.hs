@@ -78,7 +78,7 @@ start opts = do
     return ()
 
 handleTimeout :: XBattBar -> Double -> Power -> IO ()
-handleTimeout xbb charge state = return () --drawWidget (bar xbb)
+handleTimeout xbb charge state = drawWidget (bar xbb)
 
 handleEvents :: XBattBar -> Double -> Power -> IO ()
 handleEvents xbb charge state = do
