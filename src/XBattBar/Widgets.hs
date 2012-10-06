@@ -16,6 +16,7 @@ import Graphics.X11.Xlib.Extras (unmapWindow, changeWindowAttributes)
 
 import XBattBar.Types
 
+-- | wraps X11 window creation process
 mkWidget :: XContext -> Rectangle -> EventMask -> Int -> (XContext -> ExtContext -> b) -> IO b
 mkWidget ctx geom mask bw which = do
     let attrmask = cWOverrideRedirect
@@ -66,6 +67,7 @@ instance XWidget ProgressBar
                 fillRectangles dpy' window' gc' [getIndicatorRect (orientation bar) (progress bar) geom']
                 flush dpy'
 
+-- | creates a progress bar-like widget
 mkProgressBar :: XContext -> Rectangle -> Pixel -> Pixel -> Orientation -> EventMask -> IO ProgressBar
 mkProgressBar xctx geom fg bg orientation mask = do
     let dpy' = dpy xctx
@@ -99,6 +101,7 @@ instance XWidget Label
                 flush dpy'
           handleWidgetEvent label ev et = drawWidget label
 
+-- | creates a multiline non-editable text widget
 mkLabel :: XContext -> Rectangle -> Pixel -> Pixel -> String -> [String] -> EventMask -> IO Label
 mkLabel xctx geom fg bg fontName text mask = do
     let dpy' = dpy xctx

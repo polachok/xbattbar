@@ -10,8 +10,10 @@ import Graphics.X11.Xlib.Types hiding (Position)
 data Position = Top | Bottom | Left | Right
                 deriving (Eq, Show)
 
+-- | progress bar vartiants
 data Orientation = Vertical | Horizontal
 
+-- | command-line options map to this
 data Options = Options {
                  onTop               :: Bool,
                  thickness           :: Int,
@@ -23,25 +25,30 @@ data Options = Options {
                  position            :: Position
                } deriving (Show)
 
+-- | basic X11 context
 data XContext = XContext {
                   dpy    :: Display,
                   screen :: ScreenNumber,
                   parent :: Window
                 }
-
+-- | extended X11 context
 data ExtContext = ExtContext {
                    window :: Window,
                    geom   :: Rectangle,
                    gc     :: GC
                   }
 
-
+-- | XWidget is an X11 window with some context attached
 class XWidget a where
             xContext            :: a -> XContext
             widgetContext       :: a -> ExtContext
+            -- | makes the actual widget drawing
             drawWidget          :: a -> IO ()
+            -- | display widget on screen
             displayWidget       :: a -> IO ()
+            -- | hide widget
             hideWidget          :: a -> IO ()
+            -- | handle X11 events for the widget
             handleWidgetEvent   :: a -> XEventPtr -> EventType -> IO ()
 
             displayWidget a = do
@@ -57,6 +64,7 @@ class XWidget a where
             handleWidgetEvent a ev et | et == expose = drawWidget a
                                       | otherwise = return ()
 
+-- | progress bar-like widget
 data ProgressBar = ProgressBar {
                  pbXContext     :: XContext,
                  pbExContext    :: ExtContext,
@@ -65,7 +73,7 @@ data ProgressBar = ProgressBar {
                  progress       :: Double,
                  orientation    :: Orientation
                }
-
+-- | multiline non-editable text widget with centered text
 data Label = Label {
                  lXContext      :: XContext,
                  lExContext     :: ExtContext,

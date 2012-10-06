@@ -28,6 +28,7 @@ data XBattBar = XBattBar {
                     colorBat :: (Pixel, Pixel)
                 }
 
+-- | retrieve screen geometry
 getScreenRect :: XContext -> Rectangle
 getScreenRect ctx = Rectangle 0 0 sw sh
                             where dpy' = dpy ctx
@@ -35,6 +36,7 @@ getScreenRect ctx = Rectangle 0 0 sw sh
                                   sw = fromIntegral $ displayWidth dpy' screen'
                                   sh = fromIntegral $ displayHeight dpy' screen'
 
+-- | transform screen geometry into bar geometry
 getBarRect :: Position -> Dimension -> Rectangle -> Rectangle
 getBarRect pos th rect = case pos of
                         Top -> rect { rect_height = th }
@@ -42,6 +44,7 @@ getBarRect pos th rect = case pos of
                         Left -> rect { rect_width = th }
                         Right -> getBarRect Left th $ rect { rect_x = fromIntegral $ rect_width rect - th }
 
+-- | transform screen geometry into popup window geometry
 getPopupRect :: Rectangle -> Rectangle
 getPopupRect scr = Rectangle x y w h
     where x = fromIntegral $ rect_width scr `div` 2 - w `div` 2
@@ -49,6 +52,7 @@ getPopupRect scr = Rectangle x y w h
           w = 240
           h = 60
 
+-- | get pixels from color names
 getColors :: XContext -> Options -> IO ((Pixel, Pixel), (Pixel, Pixel))
 getColors ctx opts = do
     let dpy' = dpy ctx
@@ -79,6 +83,7 @@ start opts = do
 handleTimeout :: XBattBar -> Double -> Power -> IO ()
 handleTimeout xbb charge state = drawWidget (bar xbb)
 
+-- | dispatch X11 events to widgets
 handleEvents :: XBattBar -> Double -> Power -> IO ()
 handleEvents xbb charge state = do
     let bar'     = bar xbb
@@ -108,6 +113,7 @@ selectWrapper fd int eventH timeoutH = do
         0 ->  return timeoutH
         _ ->  return eventH
 
+-- | necessary transformations on state change
 applyState :: XBattBar -> Double -> Power -> ClockTime -> XBattBar
 applyState xbb charge state time =
     let bar' = bar xbb
@@ -129,6 +135,7 @@ applyState xbb charge state time =
                     popup = popup' { text = text' }
                     }
 
+-- | main loop
 run :: XBattBar -> IO ()
 run xbb = do
     let bar' = bar xbb
