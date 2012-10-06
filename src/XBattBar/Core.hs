@@ -45,10 +45,8 @@ getColors ctx opts = do
     let dpy' = dpy ctx
         screen' = screen ctx
         allocColor = allocNamedColor dpy' (defaultColormap dpy' screen')
-    a1 <- (allocColor $ chargeColorAC opts) >>= (\(c,_) -> return $ color_pixel c)
-    a2 <- (allocColor $ dischargeColorAC opts) >>= (\(c,_) -> return $ color_pixel c) 
-    b1 <- (allocColor $ chargeColorBat opts) >>= (\(c,_) -> return $ color_pixel c)
-    b2 <- (allocColor $ dischargeColorBat opts) >>= (\(c,_) -> return $ color_pixel c)
+        allocPixel f = (allocColor $ f opts) >>= (\(c,_) -> return $ color_pixel c)
+    [a1, a2, b1, b2] <- mapM allocPixel [chargeColorAC, dischargeColorAC, chargeColorBat, dischargeColorBat]
     return ((a1, a2), (b1, b2))
 
 start :: Options -> IO ()
