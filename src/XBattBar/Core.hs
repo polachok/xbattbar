@@ -14,7 +14,7 @@ import Graphics.X11.Xlib.Color
 import Graphics.X11.Xlib.Extras (unmapWindow)
 import System.Posix.IO.Select
 import System.Posix.Types
-import System.Time (getClockTime)
+import System.Time (getClockTime, ClockTime)
 
 import XBattBar.Types
 import XBattBar.Backend
@@ -109,6 +109,7 @@ selectWrapper fd int eventH timeoutH = do
         0 ->  return timeoutH
         _ ->  return eventH
 
+applyState :: XBattBar -> Double -> Power -> ClockTime -> XBattBar
 applyState xbb charge state time =
     let bar' = bar xbb
         popup' = popup xbb

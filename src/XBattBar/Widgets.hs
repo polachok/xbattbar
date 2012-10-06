@@ -99,6 +99,7 @@ instance XWidget Label
                 flush dpy'
           handleWidgetEvent label ev et = drawWidget label
 
+mkLabel :: XContext -> Rectangle -> Pixel -> Pixel -> String -> [String] -> EventMask -> IO Label
 mkLabel xctx geom fg bg fontName text mask = do
     let dpy' = dpy xctx
         screen' = screen xctx
