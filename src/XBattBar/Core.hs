@@ -73,8 +73,7 @@ start opts = do
     let popupGeom = getPopupRect $ getScreenRect ctx
     popup' <- mkLabel ctx popupGeom bg fg "fixed" [] noEventMask
     (ac, bat) <- getColors ctx opts
-    let xbb = XBattBar opts bar' popup' ac bat
-    run xbb
+    run $ XBattBar opts bar' popup' ac bat
     return ()
 
 handleTimeout :: XBattBar -> Double -> Power -> IO ()
