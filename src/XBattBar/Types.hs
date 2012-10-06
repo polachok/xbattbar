@@ -7,7 +7,7 @@ import Graphics.X11.Xlib.Extras (unmapWindow)
 import Graphics.X11.Xlib.Types hiding (Position)
 
 data Position = Top | Bottom | Left | Right
-                deriving (Show)
+                deriving (Eq, Show)
 
 data Orientation = Vertical | Horizontal
 

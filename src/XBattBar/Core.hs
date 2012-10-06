@@ -57,10 +57,12 @@ start opts = do
     let screen = defaultScreen dpy
     root <- rootWindow dpy screen
     let ctx = XContext dpy screen root
-    let geom = getWindowRect Top (fromIntegral $ thickness opts) (getScreenRect ctx)
+    let geom = getWindowRect (position opts) (fromIntegral $ thickness opts) (getScreenRect ctx)
     let fg = whitePixel dpy screen
     let bg = blackPixel dpy screen
-    bar' <- mkProgressBar ctx geom fg bg Horizontal exposureMask
+    let orientation' x | x == Top || x == Bottom = Horizontal
+                       | otherwise = Vertical
+    bar' <- mkProgressBar ctx geom fg bg (orientation' $ position opts) exposureMask
     (ac, bat) <- getColors ctx opts
     let xbb = XBattBar opts bar' ac bat
     run xbb
