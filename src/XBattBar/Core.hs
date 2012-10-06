@@ -14,6 +14,7 @@ import Graphics.X11.Xlib.Color
 import Graphics.X11.Xlib.Extras (unmapWindow)
 import System.Posix.IO.Select
 import System.Posix.Types
+import System.Time (getClockTime)
 
 import XBattBar.Types
 import XBattBar.Backend
@@ -43,10 +44,10 @@ getBarRect pos th rect = case pos of
 
 getPopupRect :: Rectangle -> Rectangle
 getPopupRect scr = Rectangle x y w h
-    where x = fromIntegral $ rect_width scr `div` 2 - 150
-          y = fromIntegral $ rect_height scr `div` 2 - 50
-          w = 300
-          h = 100
+    where x = fromIntegral $ rect_width scr `div` 2 - w `div` 2
+          y = fromIntegral $ rect_height scr `div` 2 - h `div` 2
+          w = 240
+          h = 60
 
 getColors :: XContext -> Options -> IO ((Pixel, Pixel), (Pixel, Pixel))
 getColors ctx opts = do
@@ -70,7 +71,7 @@ start opts = do
                        | otherwise = Vertical
     bar' <- mkProgressBar ctx geom fg bg (orientation' $ position opts) (exposureMask .|. enterWindowMask .|. leaveWindowMask)
     let popupGeom = getPopupRect $ getScreenRect ctx
-    popup' <- mkLabel ctx popupGeom bg fg "fixed" "ololo" noEventMask
+    popup' <- mkLabel ctx popupGeom bg fg "fixed" [] noEventMask
     (ac, bat) <- getColors ctx opts
     let xbb = XBattBar opts bar' popup' ac bat
     run xbb
@@ -108,13 +109,12 @@ selectWrapper fd int eventH timeoutH = do
         0 ->  return timeoutH
         _ ->  return eventH
 
-applyState :: XBattBar -> Double -> Power -> XBattBar
-applyState xbb charge state = 
+applyState xbb charge state time =
     let bar' = bar xbb
         popup' = popup xbb
         (af, ab) = colorAC xbb
         (bf, bb) = colorBat xbb
-        text' = (show state)++"-powered: battery level is "++(show $ floor $ 100 * charge)++"%"
+        text' = [(show state)++"-powered: battery level is "++(show $ floor $ 100 * charge)++"%", show time]
     in case state of
         AC -> xbb { bar =
                     bar' { colorBack = ab,
@@ -141,6 +141,7 @@ run xbb = do
     forever $ do
         c <- getCharge
         s <- getPower
-        let xbb' = applyState xbb c s
+        t <- getClockTime
+        let xbb' = applyState xbb c s t
         drawWidget $ bar xbb'
         selectWrapper fd int handleEvents handleTimeout >>= (\h -> h xbb' c s)

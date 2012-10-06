@@ -16,5 +16,5 @@ executable xbattbar
   main-is:           Main.hs
   other-modules:     XBattBar.Types, XBattBar.Core, XBattBar.Backend, XBattBar.Widgets
   GHC-Options:       -with-rtsopts=-V0
-  build-depends:     base, X11, select
+  build-depends:     base, X11, select, old-time
   hs-source-dirs:    src

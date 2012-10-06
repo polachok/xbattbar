@@ -72,5 +72,5 @@ data Label = Label {
                  colorBG        :: Pixel,
                  colorFont      :: Pixel,
                  font           :: FontStruct,
-                 text           :: String
+                 text           :: [String]
              }

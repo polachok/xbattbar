@@ -86,15 +86,17 @@ instance XWidget Label
                     geom'   = geom ectx'
                     fg      = colorFont label
                     bg      = colorBG label
-                    tw      = fromIntegral $ textWidth (font label) (text label)
-                    tx      = fromIntegral $ rect_width geom' `div` 2 - tw `div` 2
+                    text'   = text label
+                    font'   = font label
+                    h       = ascentFromFontStruct font' + descentFromFontStruct font'
+                    tw      = fromIntegral . textWidth font'
+                    tx t    = fromIntegral $ rect_width geom' `div` 2 - (tw t) `div` 2
                     ty      = fromIntegral $ rect_height geom' `div` 2
                 setForeground dpy' gc' bg
                 fillRectangles dpy' window' gc' [geom']
                 setForeground dpy' gc' fg
-                drawString dpy' window' gc' tx ty (text label)
+                mapM (\(s,y) -> drawString dpy' window' gc' (tx s) y s) $ zip text' [ty, (ty+h)..]
                 flush dpy'
-
           handleWidgetEvent label ev et = drawWidget label
 
 mkLabel xctx geom fg bg fontName text mask = do
