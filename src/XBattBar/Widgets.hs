@@ -1,4 +1,4 @@
-module XBattBar.Widgets (mkWidget, mkProgressBar) where
+module XBattBar.Widgets (mkWidget, mkProgressBar, mkLabel) where
 
 import Data.Word
 import Data.Bits
@@ -11,31 +11,29 @@ import Graphics.X11.Xlib.Event
 import Graphics.X11.Xlib.Misc
 import Graphics.X11.Xlib.Context
 import Graphics.X11.Xlib.Color
-import Graphics.X11.Xlib.Extras (unmapWindow)
+import Graphics.X11.Xlib.Font
+import Graphics.X11.Xlib.Extras (unmapWindow, changeWindowAttributes)
 
 import XBattBar.Types
 
-mkWidget :: XContext -> Rectangle -> EventMask -> (XContext -> ExtContext -> b) -> IO b
-mkWidget ctx geom mask which = do
+mkWidget :: XContext -> Rectangle -> EventMask -> Int -> (XContext -> ExtContext -> b) -> IO b
+mkWidget ctx geom mask bw which = do
     let attrmask = cWOverrideRedirect
-        borderWidth = 0
+        borderWidth = fromIntegral bw 
         dpy'    = dpy ctx
         screen' = screen ctx
         parent' = parent ctx
-    window <- allocaSetWindowAttributes $
-        \attrs -> do 
-                    set_override_redirect attrs True
-                    createWindow dpy' parent'
+    window <- createSimpleWindow dpy' parent'
                                 (rect_x geom)
                                 (rect_y geom)
                                 (rect_width geom)
                                 (rect_height geom)
                                 borderWidth
-                                (defaultDepth dpy' screen')
-                                inputOutput
-                                (defaultVisual dpy' screen')
-                                attrmask
-                                attrs
+                                (blackPixel dpy' screen')
+                                (whitePixel dpy' screen')
+    allocaSetWindowAttributes $ \attrs -> do 
+        set_override_redirect attrs True
+        changeWindowAttributes dpy' window cWOverrideRedirect attrs
     gc <- createGC dpy' window
     selectInput dpy' window mask
     let ectx = ExtContext window geom gc
@@ -72,5 +70,36 @@ mkProgressBar :: XContext -> Rectangle -> Pixel -> Pixel -> Orientation -> Event
 mkProgressBar xctx geom fg bg orientation mask = do
     let dpy' = dpy xctx
         screen' = screen xctx
-    f <- mkWidget xctx geom mask ProgressBar
+    f <- mkWidget xctx geom mask 0 ProgressBar
     return $ f fg bg 0.0 orientation
+
+instance XWidget Label
+    where xContext = lXContext
+          widgetContext = lExContext
+          drawWidget label = do
+                let ctx'    = xContext label
+                    ectx'   = widgetContext label
+                    dpy'    = dpy ctx'
+                    screen' = screen ctx'
+                    window' = window ectx'
+                    gc'     = gc ectx'
+                    geom'   = geom ectx'
+                    fg      = colorFont label
+                    bg      = colorBG label
+                    tw      = fromIntegral $ textWidth (font label) (text label)
+                    tx      = fromIntegral $ rect_width geom' `div` 2 - tw `div` 2
+                    ty      = fromIntegral $ rect_height geom' `div` 2
+                setForeground dpy' gc' bg
+                fillRectangles dpy' window' gc' [geom']
+                setForeground dpy' gc' fg
+                drawString dpy' window' gc' tx ty (text label)
+                flush dpy'
+
+          handleWidgetEvent label ev et = drawWidget label
+
+mkLabel xctx geom fg bg fontName text mask = do
+    let dpy' = dpy xctx
+        screen' = screen xctx
+    font <- loadQueryFont dpy' fontName
+    f <- mkWidget xctx geom mask 2 Label
+    return $ f bg fg font text

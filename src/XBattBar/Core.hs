@@ -22,6 +22,7 @@ import XBattBar.Widgets
 data XBattBar = XBattBar {
                     options  :: Options,
                     bar      :: ProgressBar,
+                    popup    :: Label,
                     colorAC  :: (Pixel, Pixel),
                     colorBat :: (Pixel, Pixel)
                 }
@@ -33,12 +34,19 @@ getScreenRect ctx = Rectangle 0 0 sw sh
                                   sw = fromIntegral $ displayWidth dpy' screen'
                                   sh = fromIntegral $ displayHeight dpy' screen'
 
-getWindowRect :: Position -> Dimension -> Rectangle -> Rectangle
-getWindowRect pos th rect = case pos of
+getBarRect :: Position -> Dimension -> Rectangle -> Rectangle
+getBarRect pos th rect = case pos of
                         Top -> rect { rect_height = th }
-                        Bottom -> getWindowRect Top th $ rect { rect_y = fromIntegral $ rect_height rect - th }
+                        Bottom -> getBarRect Top th $ rect { rect_y = fromIntegral $ rect_height rect - th }
                         Left -> rect { rect_width = th }
-                        Right -> getWindowRect Left th $ rect { rect_x = fromIntegral $ rect_width rect - th }
+                        Right -> getBarRect Left th $ rect { rect_x = fromIntegral $ rect_width rect - th }
+
+getPopupRect :: Rectangle -> Rectangle
+getPopupRect scr = Rectangle x y w h
+    where x = fromIntegral $ rect_width scr `div` 2 - 150
+          y = fromIntegral $ rect_height scr `div` 2 - 50
+          w = 300
+          h = 100
 
 getColors :: XContext -> Options -> IO ((Pixel, Pixel), (Pixel, Pixel))
 getColors ctx opts = do
@@ -55,32 +63,43 @@ start opts = do
     let screen = defaultScreen dpy
     root <- rootWindow dpy screen
     let ctx = XContext dpy screen root
-    let geom = getWindowRect (position opts) (fromIntegral $ thickness opts) (getScreenRect ctx)
+    let geom = getBarRect (position opts) (fromIntegral $ thickness opts) (getScreenRect ctx)
     let fg = whitePixel dpy screen
     let bg = blackPixel dpy screen
     let orientation' x | x == Top || x == Bottom = Horizontal
                        | otherwise = Vertical
-    bar' <- mkProgressBar ctx geom fg bg (orientation' $ position opts) exposureMask
+    bar' <- mkProgressBar ctx geom fg bg (orientation' $ position opts) (exposureMask .|. enterWindowMask .|. leaveWindowMask)
+    let popupGeom = getPopupRect $ getScreenRect ctx
+    popup' <- mkLabel ctx popupGeom bg fg "fixed" "ololo" noEventMask
     (ac, bat) <- getColors ctx opts
-    let xbb = XBattBar opts bar' ac bat
+    let xbb = XBattBar opts bar' popup' ac bat
     run xbb
     return ()
 
 handleTimeout :: XBattBar -> Double -> Power -> IO ()
-handleTimeout xbb charge state = drawWidget (bar xbb)
+handleTimeout xbb charge state = return () --drawWidget (bar xbb)
 
 handleEvents :: XBattBar -> Double -> Power -> IO ()
 handleEvents xbb charge state = do
-    let bar' = bar xbb
-        dpy' = dpy $ xContext bar'
+    let bar'     = bar xbb
+        popup'   = popup xbb
+        dpy'     = dpy $ xContext bar'
+        barWin   = window $ widgetContext bar'
+        popupWin = window $ widgetContext popup'
     n <- pending dpy'
     case n of 
         0 -> return ()
         _ -> allocaXEvent $ \e -> do
                 nextEvent dpy' e
                 t <- get_EventType e
-                print t
-                handleWidgetEvent bar' e t
+                w <- get_Window e
+                let dispatch w e t | t == enterNotify = displayWidget popup' >> drawWidget popup'
+                                   | t == leaveNotify = hideWidget popup'
+                                   | w == barWin = handleWidgetEvent bar' e t
+                                   | w == popupWin = handleWidgetEvent popup' e t
+                                   | otherwise = return ()
+                dispatch w e t
+                handleEvents xbb charge state
 
 selectWrapper fd int eventH timeoutH = do
     n <- select [fd] [] [] (Time int 0)
@@ -92,15 +111,28 @@ selectWrapper fd int eventH timeoutH = do
 applyState :: XBattBar -> Double -> Power -> XBattBar
 applyState xbb charge state = 
     let bar' = bar xbb
+        popup' = popup xbb
         (af, ab) = colorAC xbb
         (bf, bb) = colorBat xbb
+        text' = (show state)++"-powered: battery level is "++(show $ floor $ 100 * charge)++"%"
     in case state of
-        AC -> xbb { bar = bar' { colorBack = ab, colorBar = af, progress = charge }}
-        Battery -> xbb { bar = bar' { colorBack = bb, colorBar = bf, progress = charge }}
+        AC -> xbb { bar =
+                    bar' { colorBack = ab,
+                           colorBar = af,
+                           progress = charge },
+                    popup = popup' { text = text' }
+                  }
+        Battery -> xbb { bar =
+                    bar' { colorBack = bb,
+                           colorBar = bf,
+                           progress = charge },
+                    popup = popup' { text = text' }
+                    }
 
 run :: XBattBar -> IO ()
 run xbb = do
     let bar' = bar xbb
+        popup' = popup xbb
         dpy' = dpy $ xContext bar'
         int  = interval $ options xbb
     displayWidget bar'
@@ -110,4 +142,5 @@ run xbb = do
         c <- getCharge
         s <- getPower
         let xbb' = applyState xbb c s
+        drawWidget $ bar xbb'
         selectWrapper fd int handleEvents handleTimeout >>= (\h -> h xbb' c s)

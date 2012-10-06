@@ -2,6 +2,7 @@ module XBattBar.Backend (getCharge, getPower, Power(..)) where
 import System.Environment
 
 data Power = AC | Battery
+            deriving (Show)
 
 getCharge :: IO Double
 getCharge = getChargeLinux

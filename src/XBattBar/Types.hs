@@ -2,6 +2,7 @@ module XBattBar.Types (Options(..), Position(..), Orientation(..), XContext(..),
 
 import Graphics.X11.Types
 import Graphics.X11.Xlib.Event
+import Graphics.X11.Xlib.Font (FontStruct)
 import Graphics.X11.Xlib.Window (mapWindow)
 import Graphics.X11.Xlib.Extras (unmapWindow)
 import Graphics.X11.Xlib.Types hiding (Position)
@@ -66,8 +67,10 @@ data ProgressBar = ProgressBar {
                }
 
 data Label = Label {
+                 lXContext      :: XContext,
+                 lExContext     :: ExtContext,
                  colorBG        :: Pixel,
                  colorFont      :: Pixel,
-                 font           :: Font,
+                 font           :: FontStruct,
                  text           :: String
              }
