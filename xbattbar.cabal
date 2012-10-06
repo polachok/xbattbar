@@ -1,7 +1,6 @@
 name:                xbattbar
 version:             0.1
 synopsis:            Simple battery indicator
--- description:
 homepage:            https://github.com/polachok/xbattbar
 license:             MIT
 license-file:        LICENSE
@@ -11,10 +10,16 @@ maintainer:          plhk@sdf.org
 category:            Graphics
 build-type:          Simple
 cabal-version:       >=1.4
+description:         XBattBar is a simple battery indicator for X11/Linux.
+                     It draws a vertical or horizontal bar on your screen,
+                     which displays current power and charging status with
+                     color lines. A popup window appears when mouse cursor
+                     enters the indicator area. It shows current AC status,
+                     battery level and time.
 
 executable xbattbar
   main-is:           Main.hs
   other-modules:     XBattBar.Types, XBattBar.Core, XBattBar.Backend, XBattBar.Widgets
   GHC-Options:       -with-rtsopts=-V0
-  build-depends:     base, X11, select, old-time
+  build-depends:     base < 5, X11, select, old-time
   hs-source-dirs:    src
