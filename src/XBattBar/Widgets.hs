@@ -1,17 +1,20 @@
-module XBattBar.Widgets (mkWidget, ProgressBar(colorBack, colorBar, progress), mkProgressBar, Label(text), mkLabel) where
+module XBattBar.Widgets (ProgressBar(colorBack, colorBar, progress), mkProgressBar,
+                         Label(text), mkLabel) where
 
-import Data.Word
-import Data.Bits
-import Control.Monad
-import Graphics.X11.Types
+import Graphics.X11.Types (EventMask, cWOverrideRedirect)
 import Graphics.X11.Xlib.Types hiding (Position)
-import Graphics.X11.Xlib.Display
-import Graphics.X11.Xlib.Window
-import Graphics.X11.Xlib.Event
-import Graphics.X11.Xlib.Misc
-import Graphics.X11.Xlib.Context
-import Graphics.X11.Xlib.Color
-import Graphics.X11.Xlib.Font
+import Graphics.X11.Xlib.Display (blackPixel, whitePixel)
+import Graphics.X11.Xlib.Window (createSimpleWindow)
+import Graphics.X11.Xlib.Event (flush, selectInput)
+import Graphics.X11.Xlib.Misc (fillRectangles,
+                               drawString,
+                               allocaSetWindowAttributes,
+                               set_override_redirect)
+import Graphics.X11.Xlib.Context (setForeground, createGC)
+import Graphics.X11.Xlib.Font (FontStruct,
+                               ascentFromFontStruct,
+                               descentFromFontStruct,
+                               textWidth, loadQueryFont)
 import Graphics.X11.Xlib.Extras (unmapWindow, changeWindowAttributes)
 
 import XBattBar.Types

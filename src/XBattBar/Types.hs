@@ -1,7 +1,7 @@
 module XBattBar.Types (Options(..), Position(..), Orientation(..), XContext(..), ExtContext(..), XWidget(..)) where
 
-import Graphics.X11.Types
-import Graphics.X11.Xlib.Event
+import Graphics.X11.Types (expose, Window, EventType)
+import Graphics.X11.Xlib.Event (XEventPtr)
 import Graphics.X11.Xlib.Font (FontStruct)
 import Graphics.X11.Xlib.Window (mapWindow)
 import Graphics.X11.Xlib.Extras (unmapWindow)

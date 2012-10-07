@@ -1,15 +1,11 @@
 module XBattBar.Core (start) where
 import Prelude hiding (Left, Right)
-import Data.Word
-import Data.Bits
-import Control.Monad
+import Data.Bits ((.|.))
+import Control.Monad (forever)
 import Graphics.X11.Types
 import Graphics.X11.Xlib.Types hiding (Position)
 import Graphics.X11.Xlib.Display
-import Graphics.X11.Xlib.Window
 import Graphics.X11.Xlib.Event
-import Graphics.X11.Xlib.Misc
-import Graphics.X11.Xlib.Context
 import Graphics.X11.Xlib.Color
 import Graphics.X11.Xlib.Extras (unmapWindow)
 import System.Posix.IO.Select
