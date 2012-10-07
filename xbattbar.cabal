@@ -20,6 +20,5 @@ description:         XBattBar is a simple battery indicator for X11/Linux.
 executable xbattbar
   main-is:           Main.hs
   other-modules:     XBattBar.Types, XBattBar.Core, XBattBar.Backend, XBattBar.Widgets
-  GHC-Options:       -with-rtsopts=-V0
-  build-depends:     base < 5, X11, select, old-time
+  build-depends:     base < 5, X11, select >= 0.4, old-time
   hs-source-dirs:    src

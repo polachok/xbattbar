@@ -8,6 +8,7 @@ import Graphics.X11.Xlib.Display
 import Graphics.X11.Xlib.Event
 import Graphics.X11.Xlib.Color hiding (allocColor)
 import System.Posix.IO.Select
+import System.Posix.IO.Select.Types
 import System.Posix.Types
 import System.Time (getClockTime, ClockTime)
 
@@ -102,11 +103,11 @@ handleEvents xbb = do
                 handleEvents xbb
 
 selectWrapper fd int eventH timeoutH = do
-    n <- select [fd] [] [] (Time int 0)
+    n <- select' [fd] [] [] (Time $ CTimeval int 0)
     case n of 
-        -1 -> error "select() error"
-        0 ->  return timeoutH
-        _ ->  return eventH
+        Nothing -> error "select() error"
+        Just ([], [], []) ->  return timeoutH
+        Just _ ->  return eventH
 
 -- | necessary transformations on state change
 applyState :: XBattBar -> Double -> Power -> ClockTime -> XBattBar
@@ -135,7 +136,7 @@ run :: XBattBar -> IO ()
 run xbb = do
     let bar' = bar xbb
         dpy' = dpy $ xContext bar'
-        int  = interval $ options xbb
+        int  = fromIntegral $ interval $ options xbb
     displayWidget bar'
     sync dpy' False
     let fd = Fd $ connectionNumber dpy'
