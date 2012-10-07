@@ -1,4 +1,4 @@
-module XBattBar.Types (Options(..), Position(..), Orientation(..), XContext(..), ExtContext(..), ProgressBar(..), Label(..), XWidget(..)) where
+module XBattBar.Types (Options(..), Position(..), Orientation(..), XContext(..), ExtContext(..), XWidget(..)) where
 
 import Graphics.X11.Types
 import Graphics.X11.Xlib.Event
@@ -63,22 +63,3 @@ class XWidget a where
 
             handleWidgetEvent a ev et | et == expose = drawWidget a
                                       | otherwise = return ()
-
--- | progress bar-like widget
-data ProgressBar = ProgressBar {
-                 pbXContext     :: XContext,
-                 pbExContext    :: ExtContext,
-                 colorBack      :: Pixel,
-                 colorBar       :: Pixel,
-                 progress       :: Double,
-                 orientation    :: Orientation
-               }
--- | multiline non-editable text widget with centered text
-data Label = Label {
-                 lXContext      :: XContext,
-                 lExContext     :: ExtContext,
-                 colorBG        :: Pixel,
-                 colorFont      :: Pixel,
-                 font           :: FontStruct,
-                 text           :: [String]
-             }
