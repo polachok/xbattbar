@@ -112,8 +112,7 @@ mkLabel xctx geom fg bg fontName text mask = do
 -- | wraps X11 window creation process
 mkWidget :: XContext -> Rectangle -> EventMask -> Int -> (XContext -> ExtContext -> b) -> IO b
 mkWidget ctx geom mask bw which = do
-    let attrmask = cWOverrideRedirect
-        borderWidth = fromIntegral bw 
+    let borderWidth = fromIntegral bw 
         dpy'    = dpy ctx
         screen' = screen ctx
         parent' = parent ctx

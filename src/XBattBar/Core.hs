@@ -6,8 +6,7 @@ import Graphics.X11.Types
 import Graphics.X11.Xlib.Types hiding (Position)
 import Graphics.X11.Xlib.Display
 import Graphics.X11.Xlib.Event
-import Graphics.X11.Xlib.Color
-import Graphics.X11.Xlib.Extras (unmapWindow)
+import Graphics.X11.Xlib.Color hiding (allocColor)
 import System.Posix.IO.Select
 import System.Posix.Types
 import System.Time (getClockTime, ClockTime)
@@ -60,28 +59,28 @@ getColors ctx opts = do
 
 start :: Options -> IO ()
 start opts = do
-    dpy <- openDisplay ""
-    let screen = defaultScreen dpy
-    root <- rootWindow dpy screen
-    let ctx = XContext dpy screen root
-    let geom = getBarRect (position opts) (fromIntegral $ thickness opts) (getScreenRect ctx)
-    let fg = whitePixel dpy screen
-    let bg = blackPixel dpy screen
+    dpy' <- openDisplay ""
+    let screen' = defaultScreen dpy'
+    root <- rootWindow dpy' screen'
+    let ctx = XContext dpy' screen' root
+    let geom' = getBarRect (position opts) (fromIntegral $ thickness opts) (getScreenRect ctx)
+    let fg = whitePixel dpy' screen'
+    let bg = blackPixel dpy' screen'
     let orientation' x | x == Top || x == Bottom = Horizontal
                        | otherwise = Vertical
-    bar' <- mkProgressBar ctx geom fg bg (orientation' $ position opts) (exposureMask .|. enterWindowMask .|. leaveWindowMask)
+    bar' <- mkProgressBar ctx geom' fg bg (orientation' $ position opts) (exposureMask .|. enterWindowMask .|. leaveWindowMask)
     let popupGeom = getPopupRect $ getScreenRect ctx
     popup' <- mkLabel ctx popupGeom bg fg "fixed" [] noEventMask
     (ac, bat) <- getColors ctx opts
     run $ XBattBar opts bar' popup' ac bat
     return ()
 
-handleTimeout :: XBattBar -> Double -> Power -> IO ()
-handleTimeout xbb charge state = drawWidget (bar xbb)
+handleTimeout :: XBattBar -> IO ()
+handleTimeout xbb = drawWidget (bar xbb)
 
 -- | dispatch X11 events to widgets
-handleEvents :: XBattBar -> Double -> Power -> IO ()
-handleEvents xbb charge state = do
+handleEvents :: XBattBar -> IO ()
+handleEvents xbb = do
     let bar'     = bar xbb
         popup'   = popup xbb
         dpy'     = dpy $ xContext bar'
@@ -90,17 +89,17 @@ handleEvents xbb charge state = do
     n <- pending dpy'
     case n of 
         0 -> return ()
-        _ -> allocaXEvent $ \e -> do
-                nextEvent dpy' e
-                t <- get_EventType e
-                w <- get_Window e
+        _ -> allocaXEvent $ \ev -> do
+                nextEvent dpy' ev
+                ty <- get_EventType ev
+                win <- get_Window ev
                 let dispatch w e t | t == enterNotify = displayWidget popup' >> drawWidget popup'
                                    | t == leaveNotify = hideWidget popup'
                                    | w == barWin = handleWidgetEvent bar' e t
                                    | w == popupWin = handleWidgetEvent popup' e t
                                    | otherwise = return ()
-                dispatch w e t
-                handleEvents xbb charge state
+                dispatch win ev ty
+                handleEvents xbb
 
 selectWrapper fd int eventH timeoutH = do
     n <- select [fd] [] [] (Time int 0)
@@ -135,7 +134,6 @@ applyState xbb charge state time =
 run :: XBattBar -> IO ()
 run xbb = do
     let bar' = bar xbb
-        popup' = popup xbb
         dpy' = dpy $ xContext bar'
         int  = interval $ options xbb
     displayWidget bar'
@@ -147,4 +145,4 @@ run xbb = do
         t <- getClockTime
         let xbb' = applyState xbb c s t
         drawWidget $ bar xbb'
-        selectWrapper fd int handleEvents handleTimeout >>= (\h -> h xbb' c s)
+        selectWrapper fd int handleEvents handleTimeout >>= (\h -> h xbb')
