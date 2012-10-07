@@ -103,11 +103,11 @@ handleEvents xbb = do
                 handleEvents xbb
 
 selectWrapper fd int eventH timeoutH = do
-    n <- select' [fd] [] [] (Time $ CTimeval int 0)
+    n <- select'' [fd] [] [] (Time $ CTimeval int 0)
     case n of 
-        Nothing -> error "select() error"
-        Just ([], [], []) ->  return timeoutH
-        Just _ ->  return eventH
+        -1 -> error "select() error"
+        0 ->  return timeoutH
+        _ ->  return eventH
 
 -- | necessary transformations on state change
 applyState :: XBattBar -> Double -> Power -> ClockTime -> XBattBar
