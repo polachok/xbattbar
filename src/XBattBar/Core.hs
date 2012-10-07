@@ -5,6 +5,7 @@ import Control.Monad (forever)
 import Graphics.X11.Types
 import Graphics.X11.Xlib.Types hiding (Position)
 import Graphics.X11.Xlib.Display
+import Graphics.X11.Xlib.Window (raiseWindow)
 import Graphics.X11.Xlib.Event
 import Graphics.X11.Xlib.Color hiding (allocColor)
 import System.Posix.IO.Select
@@ -94,7 +95,9 @@ handleEvents xbb = do
                 nextEvent dpy' ev
                 ty <- get_EventType ev
                 win <- get_Window ev
-                let dispatch w e t | t == enterNotify = displayWidget popup' >> drawWidget popup'
+                let dispatch w e t | t == enterNotify = displayWidget popup' >>
+                                                        drawWidget popup' >>
+                                                        raiseWindow dpy' popupWin
                                    | t == leaveNotify = hideWidget popup'
                                    | w == barWin = handleWidgetEvent bar' e t
                                    | w == popupWin = handleWidgetEvent popup' e t
